@@ -1,0 +1,39 @@
+mkdir -p Work
+mkdir -p Work/"Лабораторная работа №1"
+mkdir -p Work/"ЮдинГригорийОлегович"
+mv sandbox/yugo.asm sandbox/yugo Work/"Лабораторная работа №1"/
+chmod 775 "Work/Лабораторная работа №1"
+chmod 200 Work/ЮдинГригорийОлегович
+touch "Work/Text @1" "Work/Text $2" "Work/Text #3"
+cat > "Work/Text @1" << 'EOF'
+Птица говорит отличается умом и сообразительностью!
+
+Отличается умом, отличается сообразительностью...
+EOF
+cat "Work/Text @1" > "Work/Text $2"
+mv "Work/Text $2" "Work/Лабораторная работа №1/"
+chmod 700 Work/ЮдинГригорийОлегович
+cp "Work/Text @1" "Work/ЮдинГригорийОлегович/"
+chmod 200 Work/ЮдинГригорийОлегович
+gzip "Work/Text @1"
+gzip "Work/Text #3"
+tar -cf Work/MyAchiv.tar "Work/Text @1.gz" "Work/Text #3.gz"
+gzip -d "Work/Text #3.gz"
+gzip -d "Work/Text @1.gz"
+head -n 1 "Work/Text @1" > "Work/Text #3"
+echo "Будь осторожен! Преступник вооружен!" >> "Work/Text #3"
+gzip -d "Work/Text @1.gz"
+chmod 700 Work/ЮдинГригорийОлегович
+tac "Work/Text @1" > "Work/ЮдинГригорийОлегович/Result_one"
+chmod 200 Work/ЮдинГригорийОлегович
+chmod 700 Work/ЮдинГригорийОлегович
+mv "Work/ЮдинГригорийОлегович/Result_one" "Work/ЮдинГригорийОлегович/Result_two"
+chmod 200 Work/ЮдинГригорийОлегович
+ls -la "Work/ЮдинГригорийОлегович/" | grep -E '^[^d].*T' > "Work/Лабораторная работа №1!/Result_3"
+uname -a >> "Work/Лабораторная работа №1/Result_3"
+date >> "Work/Лабораторная работа №1/Result_3"
+mkdir Lab_1
+mv sandbox Lab_1/
+mv Work Lab_1/
+mv Work_files Lab_1/
+git add .
