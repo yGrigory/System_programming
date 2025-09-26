@@ -1,0 +1,3 @@
+fasm matrix.asm
+chmod +x matrix
+./matrix

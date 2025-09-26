@@ -1,0 +1,3 @@
+fasm reverse.asm
+chmod +x reverse
+./reverse
