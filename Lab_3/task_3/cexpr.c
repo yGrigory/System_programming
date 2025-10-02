@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    long result = (((((a + b) - a) / a) + c) / a);
+    long result = (((((b + a) + a) + c) - c) + c);
 
     printf("%ld\n", result);
     return 0;

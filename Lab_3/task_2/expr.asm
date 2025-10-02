@@ -1,11 +1,11 @@
 format ELF64
 public _start
 
+           ;(((((b+a)+a)+c)-c)+c)
+
 section '.data' writeable
-usage_msg db "Usage: expr <a> <b> <c>", 10
+usage_msg db "Usage: expr <a> <b> <c>",10
 usage_len = $ - usage_msg
-divzero_msg db "Error: division by zero (a == 0)", 10
-divzero_len = $ - divzero_msg
 newline db 10
 
 section '.bss' writeable
@@ -15,11 +15,10 @@ section '.text' executable align 16
 
 atoi:
     push rbx
-    push rcx
     xor rax, rax
     xor rbx, rbx
-    mov cl, [rsi]
-    cmp cl, '-'
+    mov bl, [rsi]
+    cmp bl, '-'
     jne .parse
     mov bl, 1
     inc rsi
@@ -41,22 +40,82 @@ atoi:
     jne .ret
     neg rax
 .ret:
-    pop rcx
     pop rbx
     ret
-;(((((a + b) - a) / a) + c) / a)
-print_int64:
-    push rax
-    push rbx
-    push rcx
-    push rdx
-    push r11
+
+_start:
+    mov rdi, [rsp]
+    cmp rdi, 4
+    jl show_usage
+
+    mov rsi, [rsp+16]
+    call atoi
+    mov r8, rax   
+
+    mov rsi, [rsp+24]
+    call atoi
+    mov r9, rax   
+
+    mov rsi, [rsp+32]
+    call atoi
+    mov r10, rax
+ 
+    mov rax, r9    
+    add rax, r8     
+
+    add rax, r8     
+  
+    add rax, r10  
+    
+    sub rax, r10   
+
+    add rax, r10   
+
     lea rcx, [buf + 32]
     mov rbx, 10
-    xor r11, r11
     cmp rax, 0
     jge .convert
     neg rax
-    mov r11, 1
+    mov r11b, 1
 .convert:
-.ne
+.next_digit:
+    xor rdx, rdx
+    div rbx     
+    add dl, '0'
+    dec rcx
+    mov [rcx], dl
+    test rax, rax
+    jnz .next_digit
+    cmp r11b, 1
+    jne .print
+    dec rcx
+    mov byte [rcx], '-'
+.print:
+    mov rdx, buf + 32
+    sub rdx, rcx
+    mov rax, 1
+    mov rdi, 1
+    mov rsi, rcx
+    syscall
+    
+    mov rax, 1
+    mov rdi, 1
+    lea rsi, [newline]
+    mov rdx, 1
+    syscall
+    
+exit:
+    mov rax, 60
+    xor rdi, rdi
+    syscall
+
+show_usage:
+    mov rax, 1
+    mov rdi, 1
+    lea rsi, [usage_msg]
+    mov rdx, usage_len
+    syscall
+
+    mov rax, 60
+    mov rdi, 1
+    syscall
