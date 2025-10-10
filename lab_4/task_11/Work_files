@@ -1,0 +1,7 @@
+nasm -f elf64 choice.asm -o choice.o
+ld choice.o -o choice
+./choice
+
+gcc choice.c -o choice
+./choice
+

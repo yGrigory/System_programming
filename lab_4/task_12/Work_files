@@ -1,0 +1,6 @@
+nasm -f elf64 sequence.asm -o sequence.o
+ld sequence.o -o sequence
+./sequence
+
+gcc sequence.c -o sequence
+./sequence

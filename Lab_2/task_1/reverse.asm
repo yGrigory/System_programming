@@ -1,5 +1,5 @@
 section .data
-    str db "Hello, world!", 0   ; строка (null-terminated)
+    str db "JhWDOroBVTeXKFUlGWfCQZjNLw", 0   ; строка (null-terminated)
 
 section .text
     global _start
