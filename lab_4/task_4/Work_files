@@ -1,0 +1,6 @@
+nasm -f elf64 row_summary.asm -o row_summary.o
+ld row_summary.o -o row_summary
+./row_summary
+
+gcc row_summary.c -o row_summary
+./row_summary
