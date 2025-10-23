@@ -1,0 +1,3 @@
+nasm -f elf32 task_11.asm -o task_11.o
+ld -m elf_i386 task_11.o -o task_11
+./task_11

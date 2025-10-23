@@ -1,0 +1,8 @@
+Hello World!
+This is a sample text file for testing the assembly program.
+It contains various words with vowels: APPLE, ELEPHANT, IGLOO, ORANGE, UMBRELLA, YELLOW.
+Programming in assembly language is challenging but rewarding.
+THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG.
+Some numbers: 12345 and symbols: !@#$%^&*()
+Let's test words without vowels: rhythm, gypsy, lynx, nymph.
+End of file.

@@ -1,0 +1,8 @@
+Hello World!
+This is a sample text file for testing the assembly program.
+t contains various words with vowels: PPL, LPHNT, GL, RNG, MBRLL, LLW.
+Programming in assembly language is challenging but rewarding.
+TH QCK BRWN FX JMPS VR TH LZ DG.
+Some numbers: 12345 and symbols: !@#$%^&*()
+Let's test words without vowels: rhythm, gypsy, lynx, nymph.
+nd of file.
