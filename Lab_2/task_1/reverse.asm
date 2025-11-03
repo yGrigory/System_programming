@@ -1,36 +1,68 @@
-section .data
-    str db "JhWDOroBVTeXKFUlGWfCQZjNLw", 0   ; строка (null-terminated)
+format ELF executable
+entry start
 
-section .text
-    global _start
+segment readable executable
 
-_start:
-    ; найти длину строки
-    mov rdi, str
-    xor rcx, rcx
-.len_loop:
-    cmp byte [rdi+rcx], 0
-    je .len_done
-    inc rcx
-    jmp .len_loop
-.len_done:
-    mov rsi, rcx          ; длина строки в rsi
+start:
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, msg_original
+    mov edx, msg_original_len
+    int 0x80
+    
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, input_string
+    mov edx, input_string_len
+    int 0x80
+    
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, newline
+    mov edx, 1
+    int 0x80
+    
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, msg_reversed
+    mov edx, msg_reversed_len
+    int 0x80
+    
+    mov esi, input_string
+    mov ecx, input_string_len
+    add esi, ecx
+    dec esi                  
+    
+.reverse_print:
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, esi             
+    mov edx, 1              
+    int 0x80
+    
+    dec esi                 
+    cmp esi, input_string    
+    jae .reverse_print        
+    
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, newline
+    mov edx, 1
+    int 0x80
+    
+    mov eax, 1
+    xor ebx, ebx
+    int 0x80
 
-    ; выводить по одному символу с конца
-.print_loop:
-    dec rsi
-    mov al, [rdi+rsi]     ; берём символ
-    mov rdx, 1
-    mov rsi, rsp
-    push rax              ; временно кладём символ в стек
-    mov rdi, 1            ; stdout
-    mov rax, 1            ; sys_write
-    syscall
-    pop rax               ; убрать символ со стека
-    test rsi, rsi
-    jnz .print_loop
+segment readable writeable
 
-    ; завершение программы
-    mov rax, 60
-    xor rdi, rdi
-    syscall
+msg_original db 'Original: '
+msg_original_len = $ - msg_original
+
+msg_reversed db 'Reversed: '
+msg_reversed_len = $ - msg_reversed
+
+input_string db 'JhWDOroBVTeXKFUlGWfCQZjNLw', 0
+input_string_len = $ - input_string - 1
+
+newline db 10
