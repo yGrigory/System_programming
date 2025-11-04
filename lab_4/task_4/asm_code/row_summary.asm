@@ -1,135 +1,132 @@
-section .data
-    prompt db "Введите n: "
-    prompt_len equ $ - prompt
-    result_msg db "Результат: "
-    result_len equ $ - result_msg
-    newline db 10
-    
-    n dd 0
-    sum dd 0
+format ELF64
+public _start
 
-section .bss
-    input_buffer resb 16
-    output_buffer resb 16
+section '.data' writable
+    prompt      db "Введите n: "
+    prompt_len  = $ - prompt
+    result_msg  db "Результат: "
+    result_len  = $ - result_msg
+    newline     db 10
 
-section .text
-    global _start
+section '.bss'
+    n       rq 1
+    sum     rq 1
+    input_buffer  rb 16
+    output_buffer rb 32
+
+section '.text' executable
 
 _start:
-    ; Вывод приглашения
-    mov eax, 4
-    mov ebx, 1
-    mov ecx, prompt
-    mov edx, prompt_len
-    int 0x80
+    mov rax, 1
+    mov rdi, 1
+    lea rsi, [prompt]
+    mov rdx, prompt_len
+    syscall
 
-    ; Ввод n через системный вызов read
-    mov eax, 3
-    mov ebx, 0
-    mov ecx, input_buffer
-    mov edx, 16
-    int 0x80
+    mov rax, 0
+    mov rdi, 0
+    lea rsi, [input_buffer]
+    mov rdx, 16
+    syscall
 
-    ; Преобразование строки в число
-    mov esi, input_buffer
-    xor eax, eax
-    xor ebx, ebx
-convert_input:
-    mov bl, byte [esi]
+    lea rsi, [input_buffer]
+    xor rax, rax
+    xor rbx, rbx
+.convert_input:
+    mov bl, [rsi]
     cmp bl, 10
-    je start_calculation
+    je .done_convert
     sub bl, '0'
-    imul eax, 10
-    add eax, ebx
-    inc esi
-    jmp convert_input
+    imul rax, rax, 10
+    add rax, rbx
+    inc rsi
+    jmp .convert_input
+.done_convert:
+    mov [n], rax
 
-start_calculation:
-    mov [n], eax
-    mov ecx, 1          ; k = 1
-    mov dword [sum], 0  ; sum = 0
+    mov rcx, 1
+    mov qword [sum], 0
 
-calculate_loop:
-    cmp ecx, [n]
-    jg print_result
+.calculate_loop:
+    cmp rcx, [n]
+    jg .print_result
 
-    ; Вычисляем (-1)^k
-    mov eax, ecx
-    and eax, 1
-    jz positive
-    mov ebx, -1
-    jmp calc_term
-positive:
-    mov ebx, 1
+    mov rax, rcx
+    and rax, 1
+    jz .positive
+    mov rbx, -1
+    jmp .calc_term
+.positive:
+    mov rbx, 1
 
-calc_term:
-    ; Вычисляем k(k+4)(k+8)
-    mov eax, ecx
-    add eax, 4
-    imul eax, ecx
-    
-    mov edx, ecx
-    add edx, 8
-    imul eax, edx
-    
-    imul eax, ebx
-    add [sum], eax
-    
-    inc ecx
-    jmp calculate_loop
+.calc_term:
+    mov rax, rcx
+    mov rdx, rax
+    add rdx, 4
+    imul rax, rdx
+    mov rdx, rcx
+    add rdx, 8
+    imul rax, rdx
+    imul rax, rbx
+    add [sum], rax
 
-print_result:
-    ; Вывод "Результат: "
-    mov eax, 4
-    mov ebx, 1
-    mov ecx, result_msg
-    mov edx, result_len
-    int 0x80
+    inc rcx
+    jmp .calculate_loop
 
-    ; Преобразование результата в строку
-    mov eax, [sum]
-    mov edi, output_buffer
-    mov ecx, 10
-    xor ebx, ebx
-    
-    test eax, eax
-    jns convert_positive
-    neg eax
-    mov byte [edi], '-'
-    inc edi
-convert_positive:
-    xor edx, edx
-    div ecx
+.print_result:
+    mov rax, 1
+    mov rdi, 1
+    lea rsi, [result_msg]
+    mov rdx, result_len
+    syscall
+
+    mov rax, [sum]
+    lea rdi, [output_buffer]
+    mov rcx, 10
+    xor rbx, rbx
+    mov r8, rdi
+
+    test rax, rax
+    jns .convert_positive
+    neg rax
+    mov byte [rdi], '-'
+    inc rdi
+.convert_positive:
+    mov rcx, 10
+    xor rbx, rbx
+
+.convert_loop:
+    xor rdx, rdx
+    div rcx
     add dl, '0'
-    push edx
-    inc ebx
-    test eax, eax
-    jnz convert_positive
+    push rdx
+    inc rbx
+    test rax, rax
+    jnz .convert_loop
 
-pop_digits:
-    pop edx
-    mov [edi], dl
-    inc edi
-    dec ebx
-    jnz pop_digits
-    
-    mov byte [edi], 0
+.pop_digits:
+    mov rdi, r8
+    test byte [r8], '-'
+    jz .no_minus
+    inc rdi
+.no_minus:
+.pop_loop:
+    pop rdx
+    mov [rdi], dl
+    inc rdi
+    dec rbx
+    jnz .pop_loop
+    mov byte [rdi], 0
 
-    ; Вывод результата
-    mov eax, 4
-    mov ebx, 1
-    mov ecx, output_buffer
-    mov edx, 16
-    int 0x80
+    mov rdx, rdi
+    sub rdx, r8
 
-    ; Вывод новой строки
-    mov eax, 4
-    mov ebx, 1
-    mov ecx, newline
-    mov edx, 1
-    int 0x80
+    mov rax, 1
+    mov rdi, 1
+    lea rsi, [output_buffer]
+    and rsp, -16
+    syscall
 
-    ; Завершение программы
-    mov eax, 1
-    xor ebx, ebx
-    int 0x80
+    mov rax, 60
+    xor rdi, rdi
+    syscall
