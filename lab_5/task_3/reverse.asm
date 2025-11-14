@@ -1,101 +1,122 @@
-format ELF executable
-entry start
+format ELF64
+public _start
 
-segment readable executable
+section '.data' writable
+    usage_msg db "Usage: ./reverse <input_file> <output_file>", 10
+    usage_len = $ - usage_msg
 
-start:
-    pop eax
-    cmp eax, 3
-    jne error
+    error_open db "Error: cannot open file", 10
+    error_open_len = $ - error_open
 
-    pop eax
-    pop ebx
-    mov [input_file], ebx
-    pop ebx
-    mov [output_file], ebx
+    buffer_size equ 4096
 
-    mov eax, 5
-    mov ebx, [input_file]
-    mov ecx, 0
-    int 0x80
-    cmp eax, 0
-    jl error
-    mov [input_fd], eax
+section '.bss' writable
+    input_fd   dq 0
+    output_fd  dq 0
+    file_size  dq 0
+    file_buffer rb buffer_size
 
-    mov eax, 5
-    mov ebx, [output_file]
-    mov ecx, 0x241
-    mov edx, 0644o
-    int 0x80
-    cmp eax, 0
-    jl error
-    mov [output_fd], eax
+section '.text' executable
 
-read_file:
-    mov eax, 3
-    mov ebx, [input_fd]
-    mov ecx, file_buffer
-    mov edx, 4096
-    int 0x80
-    cmp eax, 0
-    jle reverse_content
-    mov [file_size], eax
-    jmp read_file
+_start:
+    pop rcx
+    cmp rcx, 3
+    jne .show_usage
 
-reverse_content:
-    mov esi, file_buffer
-    mov edi, file_buffer
-    add edi, [file_size]
-    dec edi
+    pop rsi                ; пропустить имя программы
+    pop rdi                ; argv[1] = input
+    mov r12, rdi
+    pop rdi                ; argv[2] = output
+    mov r13, rdi
 
-reverse_loop:
-    cmp esi, edi
-    jae write_reversed
-    mov al, [esi]
-    mov bl, [edi]
-    mov [esi], bl
-    mov [edi], al
-    inc esi
-    dec edi
-    jmp reverse_loop
+    ; открыть входной файл (O_RDONLY)
+    mov rax, 2
+    mov rdi, r12
+    xor rsi, rsi
+    syscall
+    cmp rax, 0
+    jl .error_open
+    mov [input_fd], rax
 
-write_reversed:
-    mov eax, 4
-    mov ebx, [output_fd]
-    mov ecx, file_buffer
-    mov edx, [file_size]
-    int 0x80
+    ; открыть/создать выходной файл (O_CREAT|O_WRONLY|O_TRUNC)
+    mov rax, 2
+    mov rdi, r13
+    mov rsi, 0x241         ; O_CREAT | O_WRONLY | O_TRUNC
+    mov rdx, 0644o
+    syscall
+    cmp rax, 0
+    jl .error_open
+    mov [output_fd], rax
 
-    mov eax, 6
-    mov ebx, [input_fd]
-    int 0x80
+    ; читать входной файл
+.read_file:
+    mov rax, 0
+    mov rdi, [input_fd]
+    mov rsi, file_buffer
+    mov rdx, buffer_size
+    syscall
+    cmp rax, 0
+    jle .reverse_content
+    mov [file_size], rax
+    jmp .read_file
 
-    mov eax, 6
-    mov ebx, [output_fd]
-    int 0x80
+.reverse_content:
+    mov rsi, file_buffer
+    mov rdi, file_buffer
+    mov rax, [file_size]
+    add rdi, rax
+    dec rdi
 
-    mov eax, 1
-    xor ebx, ebx
-    int 0x80
+.reverse_loop:
+    cmp rsi, rdi
+    jae .write_reversed
+    mov al, [rsi]
+    mov bl, [rdi]
+    mov [rsi], bl
+    mov [rdi], al
+    inc rsi
+    dec rdi
+    jmp .reverse_loop
 
-error:
-    mov eax, 4
-    mov ebx, 1
-    mov ecx, error_msg
-    mov edx, error_msg_len
-    int 0x80
-    mov eax, 1
-    mov ebx, 1
-    int 0x80
+.write_reversed:
+    mov rax, 1
+    mov rdi, [output_fd]
+    mov rsi, file_buffer
+    mov rdx, [file_size]
+    syscall
 
-segment readable writeable
+    ; закрыть файлы
+    mov rax, 3
+    mov rdi, [input_fd]
+    syscall
+    mov rax, 3
+    mov rdi, [output_fd]
+    syscall
 
-error_msg db "Error: usage: ./reverse input.txt output.txt", 10, 0
-error_msg_len = $ - error_msg
+    jmp .exit_success
 
-input_file dd 0
-output_file dd 0
-input_fd dd 0
-output_fd dd 0
-file_size dd 0
-file_buffer rb 4096
+.show_usage:
+    mov rax, 1
+    mov rdi, 1
+    mov rsi, usage_msg
+    mov rdx, usage_len
+    syscall
+    jmp .exit_fail
+
+.error_open:
+    mov rax, 1
+    mov rdi, 1
+    mov rsi, error_open
+    mov rdx, error_open_len
+    syscall
+    jmp .exit_fail
+
+.exit_success:
+    mov rax, 60
+    xor rdi, rdi
+    syscall
+
+.exit_fail:
+    mov rax, 60
+    mov rdi, 1
+    syscall
