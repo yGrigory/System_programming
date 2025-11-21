@@ -19,7 +19,6 @@ extrn endwin
 extrn exit
 extrn timeout
 extrn usleep
-extrn printw
 
 section '.bss' writable
     xmax dq 1
@@ -38,14 +37,13 @@ _start:
     dec rax
     mov [ymax], rax
     call start_color
-    ; Инициализация цветовых пар для желтого и белого
-    mov rdi, 1
-    mov rsi, 3      ; COLOR_YELLOW (обычно 3 в ncurses)
-    mov rdx, 0      ; COLOR_BLACK как фон
+    mov rdi, 1      
+    mov rsi, 2
+    mov rdx, 3 
     call init_pair
-    mov rdi, 2
-    mov rsi, 7      ; COLOR_WHITE (обычно 7 в ncurses)
-    mov rdx, 0      ; COLOR_BLACK как фон
+    mov rdi, 2      
+    mov rsi, 15
+    mov rdx, 15
     call init_pair
     call refresh
     call noecho
@@ -56,29 +54,26 @@ _start:
 
 .begin:
     mov rax, [palette]
-    and rax, 0x100
-    cmp rax, 0
-    jne .white      ; Изменено с .mag на .white
-    mov rax, [palette]
-    and rax, 0xff
-    or rax, 0x100   ; Желтый цвет
+    and rax, 0x100      
+    cmp rax, 0         
+    jne .mag
+    mov rax, [palette] 
+    and rax, 0xff      
+    or rax, 0x100
     jmp @f
-.white:
+.mag:
     mov rax, [palette]
-    and rax, 0xff
-    or rax, 0x200   ; Белый цвет
+    and rax, 0xff       
+    or rax, 0x200      
 @@:
     mov [palette], rax
-    mov r8, 0
-    mov r9, 0
-    jmp .loop_to_right
-
+    mov r8, 0          
+    mov r9, 0          
+    jmp .loop_to_right 
 .to_down_left:
-    inc r8
     inc r9
     cmp r9, [ymax]
     jg .begin
-
 .loop_to_right:
     mov rdi, [delay]
     call usleep
@@ -93,18 +88,18 @@ _start:
     mov rdi, 1
     call timeout
     call getch
-    cmp rax, 'z'    ; Изменено с 'a' на 'z'
+    cmp rax, 'z'      
     jne @f
     jmp .exit
-@@:
-    cmp rax, 'k'    ; Изменено с 'g' на 'k'
+@@: 
+    cmp rax, 'k'       
     jne @f
-    cmp [delay], 2000
+    cmp qword [delay], 20000
     je .fast1
-    mov [delay], 2000
+    mov qword [delay], 20000 
     jmp @f
 .fast1:
-    mov [delay], 1
+    mov qword [delay], 1000     ; быстрая скорость
 @@:
     pop r9
     pop r8
@@ -114,11 +109,9 @@ _start:
     jmp .loop_to_right
 
 .to_down_right:
-    dec r8
     inc r9
     cmp r9, [ymax]
     jg .begin
-
 .loop_to_left:
     mov rdi, [delay]
     call usleep
@@ -133,18 +126,19 @@ _start:
     mov rdi, 1
     call timeout
     call getch
-    cmp rax, 'z'    ; Изменено с 'a' на 'z'
+    
+    cmp rax, 'z'      
     jne @f
     jmp .exit
 @@:
-    cmp rax, 'k'    ; Изменено с 'g' на 'k'
+    cmp rax, 'k'     
     jne @f
-    cmp [delay], 2000
+    cmp qword [delay], 20000
     je .fast2
-    mov [delay], 2000
+    mov qword [delay], 20000  
     jmp @f
 .fast2:
-    mov [delay], 1
+    mov qword [delay], 1000    
 @@:
     pop r9
     pop r8
