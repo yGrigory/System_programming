@@ -1,0 +1,2 @@
+compare.out 16K
+sum 767
